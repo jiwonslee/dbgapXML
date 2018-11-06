@@ -2,9 +2,6 @@ library(xml2)
 library(RCurl)
 library(stringr)
 library(argparser)
-require(dplyr)
-#setwd('C:/Users/jq650/Desktop/work/phenotype_harmonization/dbgap-dict-pulls')
-
 argp <- arg_parser("Parse dbgap xml var reports and data dicts")
 argp <- add_argument(argp, "study", help="enter phs accession number of study")
 argp <- add_argument(argp, "--table", help="enter pht accession number of table)", type="character")
@@ -17,9 +14,9 @@ message(paste0('searching for study ', study))
 if (!is.na(table)){
   message(paste0('searching for table ', table))
 }else{
-  message('warning: no --table set. Information of all tables are being extracted')
+  message('warning: no --table set. Information from all tables is being extracted')
 }
-###tested with#####
+###sample testing#####
 #study = 'phs000007'
 #table = 'pht000024'
 
@@ -42,9 +39,8 @@ return_consent <- function(var_parts){
   return(consent)
 }
 
-###### needs suffix / for the next line to work...
-folders <- unlist(strsplit(RCurl::getURL(paste0(study_url, '/'), ftp.use.epsv = TRUE, dirlistonly = TRUE), "\n"))
 
+folders <- unlist(strsplit(RCurl::getURL(paste0(study_url, '/'), ftp.use.epsv = TRUE, dirlistonly = TRUE), "\n"))
 max_v = -1
 max_p = -1
 for (i in 1:length(folders)) {
@@ -62,10 +58,10 @@ for (i in 1:length(folders)) {
     }
     current = NULL
 }
-latest_study = paste0(study, ".v", toString(max_v), ".p", toString(max_p))
 
+latest_study = paste0(study, ".v", toString(max_v), ".p", toString(max_p))
 main_url = paste(study_url, latest_study, 'pheno_variable_summaries/', sep="/")
-#print(paste("latest study url", main_url))
+print(paste("latest study url", main_url))
 
 xml_path_suffixes <- unlist(strsplit(RCurl::getURL(main_url, ftp.use.epsv = TRUE, dirlistonly = TRUE), "\n"))
 xml_path_suffixes <- trimws(xml_path_suffixes)
@@ -76,8 +72,8 @@ if (!is.na(table)){
 
 message(paste0('extracting information from ', length(xml_path_suffixes), ' files'))
 
-#for (i in 1:length(xml_path_suffixes)) {
 for (i in 1:length(xml_path_suffixes)) {
+  message(paste0('current xml ', xml_path_suffixes[i]))
     xml_url = paste0(main_url, xml_path_suffixes[i])
     current = unlist(strsplit(xml_path_suffixes[i], "\\."))
     # don't parse meta data xml
@@ -106,6 +102,7 @@ for (i in 1:length(xml_path_suffixes)) {
             quit()
         }
         xml = read_xml(RCurl::getURLContent(xml_url))
+        Sys.sleep(2)
         recs <- xml_find_all(xml, "//variable")
         vals = trimws(xml_text(recs))
         full_variable_id <- trimws(xml_attr(recs, "id"))
