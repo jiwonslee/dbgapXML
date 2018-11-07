@@ -2,6 +2,7 @@ library(xml2)
 library(RCurl)
 library(stringr)
 library(argparser)
+
 argp <- arg_parser("Parse dbgap xml var reports and data dicts")
 argp <- add_argument(argp, "study", help="enter phs accession number of study")
 argp <- add_argument(argp, "--table", help="enter pht accession number of table)", type="character")
@@ -14,7 +15,7 @@ message(paste0('searching for study ', study))
 if (!is.na(table)){
   message(paste0('searching for table ', table))
 }else{
-  message('warning: no --table set. Information from all tables is being extracted')
+  message('warning: no --table set. Information of all tables are being extracted')
 }
 ###sample testing#####
 #study = 'phs000007'
@@ -39,8 +40,9 @@ return_consent <- function(var_parts){
   return(consent)
 }
 
-
+###### needs suffix / for the next line to work...
 folders <- unlist(strsplit(RCurl::getURL(paste0(study_url, '/'), ftp.use.epsv = TRUE, dirlistonly = TRUE), "\n"))
+
 max_v = -1
 max_p = -1
 for (i in 1:length(folders)) {
@@ -58,8 +60,8 @@ for (i in 1:length(folders)) {
     }
     current = NULL
 }
-
 latest_study = paste0(study, ".v", toString(max_v), ".p", toString(max_p))
+
 main_url = paste(study_url, latest_study, 'pheno_variable_summaries/', sep="/")
 print(paste("latest study url", main_url))
 
@@ -73,7 +75,8 @@ if (!is.na(table)){
 message(paste0('extracting information from ', length(xml_path_suffixes), ' files'))
 
 for (i in 1:length(xml_path_suffixes)) {
-  message(paste0('current xml ', xml_path_suffixes[i]))
+  message(paste0('current xml: ', xml_path_suffixes[i]))
+  message(paste0('remaining files to process: ', as.character(length(xml_path_suffixes)-i + 1), ' files'))
     xml_url = paste0(main_url, xml_path_suffixes[i])
     current = unlist(strsplit(xml_path_suffixes[i], "\\."))
     # don't parse meta data xml
